@@ -8,6 +8,7 @@ The frontend does most of the heavy lifting (it's all in the template),
 this just handles the API calls for generating presets.
 """
 
+import os
 from flask import Flask, render_template, request, jsonify
 
 from .core import (
@@ -18,7 +19,10 @@ from .core import (
     validate_config,
 )
 
-app = Flask(__name__)
+# when installed as a package Flask can't find templates via __name__ alone,
+# so we point it explicitly to the templates folder next to this file
+_here = os.path.dirname(os.path.abspath(__file__))
+app = Flask(__name__, template_folder=os.path.join(_here, "templates"))
 
 
 @app.route("/")
