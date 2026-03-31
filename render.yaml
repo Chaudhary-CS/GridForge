@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: gridforge
+    runtime: python
+    buildCommand: pip install -e .
+    startCommand: gunicorn "cmake_preset_matrix.web:app"
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
