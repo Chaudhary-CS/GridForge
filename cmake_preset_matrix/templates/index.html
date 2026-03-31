@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>cmake-preset-matrix</title>
+    <style>
+        /* keeping the CSS here instead of a separate file because
+           it's easier to ship as one template with flask */
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: #0d1117;
+            color: #e6edf3;
+            min-height: 100vh;
+        }
+
+        header {
+            background: #161b22;
+            border-bottom: 1px solid #30363d;
+            padding: 16px 24px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        header h1 {
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        header .subtitle {
+            color: #8b949e;
+            font-size: 14px;
+        }
+
+        .badge {
+            background: #238636;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            margin-left: auto;
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: 320px 1fr 1fr;
+            gap: 0;
+            height: calc(100vh - 57px);
+        }
+
+        .panel {
+            border-right: 1px solid #30363d;
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        .panel:last-child { border-right: none; }
+
+        .panel-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #8b949e;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 16px;
+        }
+
+        /* --- left panel: dimension inputs --- */
+        .dim-card {
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 8px;
+            padding: 14px;
+            margin-bottom: 12px;
+        }
+
+        .dim-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .dim-name {
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .remove-btn {
+            background: none;
+            border: none;
+            color: #f85149;
+            cursor: pointer;
+            font-size: 18px;
+            line-height: 1;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+
+        .remove-btn:hover { background: rgba(248, 81, 73, 0.1); }
+
+        .dim-values {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .dim-tag {
+            background: #1f6feb22;
+            border: 1px solid #1f6feb55;
+            color: #58a6ff;
+            padding: 3px 10px;
+            border-radius: 16px;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .dim-tag .x {
+            cursor: pointer;
+            opacity: 0.6;
+            font-size: 14px;
+        }
+
+        .dim-tag .x:hover { opacity: 1; }
+
+        .dim-input-row {
+            display: flex;
+            gap: 6px;
+            margin-top: 8px;
+        }
+
+        input, select {
+            background: #0d1117;
+            border: 1px solid #30363d;
+            color: #e6edf3;
+            padding: 6px 10px;
+            border-radius: 6px;
+            font-size: 13px;
+            outline: none;
+        }
+
+        input:focus, select:focus {
+            border-color: #58a6ff;
+        }
+
+        .dim-input-row input {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .add-btn {
+            background: #238636;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            white-space: nowrap;
+        }
+
+        .add-btn:hover { background: #2ea043; }
+
+        .add-dim-section {
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid #30363d;
+        }
+
+        .add-dim-section label {
+            font-size: 13px;
+            color: #8b949e;
+            display: block;
+            margin-bottom: 6px;
+        }
+
+        /* options section */
+        .options-section {
+            margin-top: 20px;
+            padding-top: 16px;
+            border-top: 1px solid #30363d;
+        }
+
+        .option-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+
+        .option-row label {
+            font-size: 13px;
+            color: #c9d1d9;
+        }
+
+        .option-row select {
+            width: 150px;
+        }
+
+        /* --- center panel: the matrix grid --- */
+        .matrix-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+
+        .matrix-cell {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-family: 'SF Mono', 'Fira Code', monospace;
+            cursor: pointer;
+            transition: all 0.15s;
+            user-select: none;
+        }
+
+        .matrix-cell.active {
+            background: #23863622;
+            border: 1px solid #23863666;
+            color: #3fb950;
+        }
+
+        .matrix-cell.excluded {
+            background: #161b22;
+            border: 1px solid #30363d;
+            color: #484f58;
+            text-decoration: line-through;
+        }
+
+        .matrix-cell:hover {
+            transform: scale(1.02);
+        }
+
+        .matrix-stats {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 16px;
+            font-size: 13px;
+            color: #8b949e;
+        }
+
+        .stat-num {
+            color: #58a6ff;
+            font-weight: 600;
+        }
+
+        /* --- right panel: json preview --- */
+        .json-preview {
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 8px;
+            padding: 16px;
+            font-family: 'SF Mono', 'Fira Code', Consolas, monospace;
+            font-size: 12px;
+            line-height: 1.6;
+            overflow: auto;
+            white-space: pre;
+            max-height: calc(100vh - 180px);
+            tab-size: 2;
+        }
+
+        .action-bar {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .action-btn {
+            background: #21262d;
+            color: #c9d1d9;
+            border: 1px solid #30363d;
+            padding: 6px 14px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+        }
+
+        .action-btn:hover { background: #30363d; }
+
+        .action-btn.primary {
+            background: #1f6feb;
+            border-color: #1f6feb;
+            color: white;
+        }
+
+        .action-btn.primary:hover { background: #388bfd; }
+
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 200px;
+            color: #484f58;
+            font-size: 14px;
+            text-align: center;
+        }
+
+        .empty-state .arrow {
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+
+        /* syntax highlighting - kept simple */
+        .json-key { color: #79c0ff; }
+        .json-str { color: #a5d6ff; }
+        .json-num { color: #d2a8ff; }
+        .json-bool { color: #ff7b72; }
+        .json-null { color: #ff7b72; }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>cmake-preset-matrix</h1>
+    <span class="subtitle">build matrix → CMakePresets.json</span>
+    <span class="badge" id="presetCount">0 presets</span>
+</header>
+
+<div class="container">
+    <!-- LEFT: config panel -->
+    <div class="panel" id="configPanel">
+        <div class="panel-title">Dimensions</div>
+
+        <div id="dimensionsList"></div>
+
+        <div class="add-dim-section">
+            <label>Add a new dimension</label>
+            <div style="display:flex; gap:6px;">
+                <select id="newDimSelect">
+                    <option value="os">os</option>
+                    <option value="build_type">build_type</option>
+                    <option value="cuda_arch">cuda_arch</option>
+                    <option value="custom">custom...</option>
+                </select>
+                <input type="text" id="customDimName" placeholder="name" style="display:none; width:100px;">
+                <button class="add-btn" onclick="addDimension()">+ Add</button>
+            </div>
+        </div>
+
+        <div class="options-section">
+            <div class="panel-title">Options</div>
+            <div class="option-row">
+                <label>Toolchain</label>
+                <select id="toolchainSelect" onchange="regenerate()">
+                    <option value="">None</option>
+                    <option value="vcpkg">vcpkg</option>
+                    <option value="conan">Conan</option>
+                </select>
+            </div>
+            <div class="option-row">
+                <label>Default Generator</label>
+                <select id="generatorSelect" onchange="regenerate()">
+                    <option value="Ninja">Ninja</option>
+                    <option value="Unix Makefiles">Unix Makefiles</option>
+                    <option value="Visual Studio 17 2022">VS 2022</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <!-- CENTER: matrix grid -->
+    <div class="panel" id="matrixPanel">
+        <div class="panel-title">Preset Matrix</div>
+        <div class="matrix-stats">
+            <span><span class="stat-num" id="activeCount">0</span> active</span>
+            <span><span class="stat-num" id="excludedCount">0</span> excluded</span>
+            <span><span class="stat-num" id="totalCount">0</span> total</span>
+        </div>
+        <div id="matrixGrid" class="matrix-grid">
+            <div class="empty-state">
+                <span class="arrow">←</span>
+                Add some dimensions to see the matrix
+            </div>
+        </div>
+    </div>
+
+    <!-- RIGHT: json preview -->
+    <div class="panel">
+        <div class="panel-title">Generated CMakePresets.json</div>
+        <div class="action-bar">
+            <button class="action-btn primary" onclick="copyJson()">Copy JSON</button>
+            <button class="action-btn" onclick="downloadJson()">Download</button>
+        </div>
+        <div class="json-preview" id="jsonPreview">
+            <div class="empty-state">
+                Configure your matrix to see the output here
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// -- state --
+// this is basically my "model" - dimensions, which combos are excluded, etc.
+let dimensions = {};
+let excludedPresets = new Set();
+let lastGeneratedJson = "";
+
+// some common starting values so the user doesn't start from scratch
+const SUGGESTED_VALUES = {
+    "os": ["linux", "windows"],
+    "build_type": ["Release", "Debug"],
+    "cuda_arch": ["sm_75", "sm_86", "sm_90"],
+};
+
+// -- show/hide the custom name input --
+document.getElementById("newDimSelect").addEventListener("change", function() {
+    let customInput = document.getElementById("customDimName");
+    customInput.style.display = this.value === "custom" ? "block" : "none";
+});
+
+function addDimension() {
+    let select = document.getElementById("newDimSelect");
+    let dimName = select.value;
+
+    if (dimName === "custom") {
+        dimName = document.getElementById("customDimName").value.trim();
+        if (!dimName) {
+            alert("Please enter a dimension name");
+            return;
+        }
+    }
+
+    if (dimensions[dimName]) {
+        alert("'" + dimName + "' already exists");
+        return;
+    }
+
+    // start with suggested values if we have them, otherwise empty
+    dimensions[dimName] = SUGGESTED_VALUES[dimName]
+        ? [...SUGGESTED_VALUES[dimName]]
+        : [];
+
+    renderDimensions();
+    regenerate();
+}
+
+function removeDimension(name) {
+    delete dimensions[name];
+    excludedPresets.clear();
+    renderDimensions();
+    regenerate();
+}
+
+function addValueToDimension(dimName) {
+    let input = document.getElementById("input-" + dimName);
+    let val = input.value.trim();
+    if (!val) return;
+
+    if (dimensions[dimName].includes(val)) {
+        input.value = "";
+        return;
+    }
+
+    dimensions[dimName].push(val);
+    input.value = "";
+    renderDimensions();
+    regenerate();
+}
+
+function removeValue(dimName, val) {
+    dimensions[dimName] = dimensions[dimName].filter(v => v !== val);
+    excludedPresets.clear();
+    renderDimensions();
+    regenerate();
+}
+
+function renderDimensions() {
+    let container = document.getElementById("dimensionsList");
+    container.innerHTML = "";
+
+    for (let [name, values] of Object.entries(dimensions)) {
+        let card = document.createElement("div");
+        card.className = "dim-card";
+
+        let tagsHtml = values.map(v =>
+            `<span class="dim-tag">${v}<span class="x" onclick="removeValue('${name}','${v}')">×</span></span>`
+        ).join("");
+
+        card.innerHTML = `
+            <div class="dim-header">
+                <span class="dim-name">${name}</span>
+                <button class="remove-btn" onclick="removeDimension('${name}')">×</button>
+            </div>
+            <div class="dim-values">${tagsHtml}</div>
+            <div class="dim-input-row">
+                <input type="text" id="input-${name}" placeholder="add value..."
+                       onkeydown="if(event.key==='Enter') addValueToDimension('${name}')">
+                <button class="add-btn" onclick="addValueToDimension('${name}')">+</button>
+            </div>
+        `;
+        container.appendChild(card);
+    }
+}
+
+function togglePreset(name) {
+    if (excludedPresets.has(name)) {
+        excludedPresets.delete(name);
+    } else {
+        excludedPresets.add(name);
+    }
+    regenerate();
+}
+
+// -- talk to the backend --
+
+async function regenerate() {
+    // check if we have anything to generate
+    let hasValues = Object.values(dimensions).some(v => v.length > 0);
+    if (!hasValues || Object.keys(dimensions).length === 0) {
+        document.getElementById("matrixGrid").innerHTML =
+            '<div class="empty-state"><span class="arrow">←</span>Add some dimensions to see the matrix</div>';
+        document.getElementById("jsonPreview").innerHTML =
+            '<div class="empty-state">Configure your matrix to see the output here</div>';
+        updateStats(0, 0);
+        return;
+    }
+
+    let payload = {
+        dimensions: dimensions,
+        excluded: Array.from(excludedPresets),
+        toolchain: document.getElementById("toolchainSelect").value || null,
+        generator: document.getElementById("generatorSelect").value,
+        cache_variables: {},
+    };
+
+    // first get the full list of combos (including excluded) for the grid
+    let expandResp = await fetch("/api/expand", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({dimensions: dimensions}),
+    });
+    let expandData = await expandResp.json();
+
+    // then get the actual generated presets (excluding toggled-off ones)
+    let genResp = await fetch("/api/generate", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify(payload),
+    });
+    let genData = await genResp.json();
+
+    if (genData.error) {
+        document.getElementById("jsonPreview").textContent = "Error: " + genData.error;
+        return;
+    }
+
+    // update the grid
+    renderGrid(expandData.names, expandData.combos);
+
+    // update the json preview with syntax highlighting
+    lastGeneratedJson = genData.presets_json;
+    document.getElementById("jsonPreview").innerHTML = highlightJson(genData.presets_json);
+
+    // update stats
+    let totalCount = expandData.names.length;
+    let activeCount = genData.num_configure;
+    updateStats(activeCount, totalCount - activeCount);
+
+    document.getElementById("presetCount").textContent = activeCount + " presets";
+}
+
+function renderGrid(names, combos) {
+    let grid = document.getElementById("matrixGrid");
+    grid.innerHTML = "";
+
+    for (let i = 0; i < names.length; i++) {
+        let name = names[i];
+        let combo = combos[i];
+        let isExcluded = excludedPresets.has(name);
+
+        let cell = document.createElement("div");
+        cell.className = "matrix-cell " + (isExcluded ? "excluded" : "active");
+        cell.textContent = name;
+        cell.title = Object.entries(combo).map(([k,v]) => k + "=" + v).join(", ");
+        cell.onclick = () => togglePreset(name);
+        grid.appendChild(cell);
+    }
+}
+
+function updateStats(active, excluded) {
+    document.getElementById("activeCount").textContent = active;
+    document.getElementById("excludedCount").textContent = excluded;
+    document.getElementById("totalCount").textContent = active + excluded;
+}
+
+// -- json syntax highlighting (basic but does the job) --
+function highlightJson(jsonStr) {
+    // escape html first
+    let escaped = jsonStr
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
+
+    // highlight keys, strings, numbers, bools
+    escaped = escaped.replace(/"([^"]+)"(\s*:)/g, '<span class="json-key">"$1"</span>$2');
+    escaped = escaped.replace(/:\s*"([^"]*)"/g, ': <span class="json-str">"$1"</span>');
+    escaped = escaped.replace(/:\s*(\d+)/g, ': <span class="json-num">$1</span>');
+    escaped = escaped.replace(/:\s*(true|false)/g, ': <span class="json-bool">$1</span>');
+    escaped = escaped.replace(/:\s*(null)/g, ': <span class="json-null">$1</span>');
+
+    return escaped;
+}
+
+// -- copy / download --
+function copyJson() {
+    navigator.clipboard.writeText(lastGeneratedJson).then(() => {
+        let btn = document.querySelector(".action-btn.primary");
+        let orig = btn.textContent;
+        btn.textContent = "Copied!";
+        setTimeout(() => btn.textContent = orig, 1500);
+    });
+}
+
+function downloadJson() {
+    if (!lastGeneratedJson) return;
+    let blob = new Blob([lastGeneratedJson], {type: "application/json"});
+    let url = URL.createObjectURL(blob);
+    let a = document.createElement("a");
+    a.href = url;
+    a.download = "CMakePresets.json";
+    a.click();
+    URL.revokeObjectURL(url);
+}
+</script>
+
+</body>
+</html>
