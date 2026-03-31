@@ -1,0 +1,27 @@
+# Example: a typical CUDA project build matrix
+#
+# This is meant to mirror something like what NVIDIA's CCCL team
+# might use - multiple OS targets, build types, and GPU architectures.
+#
+# Run: cmake-preset-matrix generate examples/cuda_project.yaml
+
+generator: Ninja
+toolchain: vcpkg
+
+dimensions:
+  os:
+    - linux
+    - windows
+  build_type:
+    - Release
+    - Debug
+  cuda_arch:
+    - sm_75    # Turing (RTX 2xxx)
+    - sm_86    # Ampere (RTX 3xxx)
+    - sm_90    # Hopper (H100)
+
+# these get applied to every preset
+cache_variables:
+  CMAKE_CUDA_STANDARD: "17"
+  CMAKE_CXX_STANDARD: "17"
+  BUILD_TESTS: "ON"

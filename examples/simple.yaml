@@ -1,0 +1,13 @@
+# Simple example - just OS and build type
+# Good starting point if you don't need CUDA stuff
+
+generator: Ninja
+
+dimensions:
+  os:
+    - linux
+    - windows
+    - macos
+  build_type:
+    - Release
+    - Debug
